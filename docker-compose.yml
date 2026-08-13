@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - cloudopshub-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql://cloudops:cloudops_pass@db:5432/cloudopshub
+      - SECRET_KEY=development_secret_key_change_me
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cloudopshub-network
+    command: >
+      bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=cloudops
+      - POSTGRES_PASSWORD=cloudops_pass
+      - POSTGRES_DB=cloudopshub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudops -d cloudopshub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudopshub-network
+
+networks:
+  cloudopshub-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
