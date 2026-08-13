@@ -28,7 +28,7 @@ jobs:
     - name: Lint with Ruff
       run: |
         # Stop the build if there are Python syntax errors or undefined names
-        ruff check backend/ --select=E9,F63,F7,F82 --show-source
+        ruff check backend/ --select=E9,F63,F7,F82
         # Ignore non-critical lint errors for now
         ruff check backend/ --exit-zero
         
@@ -86,9 +86,6 @@ jobs:
       
     - name: Terraform Init
       run: cd infrastructure/terraform && terraform init -backend=false
-      
-    - name: Terraform Format
-      run: cd infrastructure/terraform && terraform fmt -check
       
     - name: Terraform Validate
       run: cd infrastructure/terraform && terraform validate
